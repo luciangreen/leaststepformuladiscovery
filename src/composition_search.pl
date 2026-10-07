@@ -18,7 +18,9 @@ expand_entries(Dictionary, Entries) :-
     findall(entry(Name, Arity, Modes, Cost),
         ( member(E, Dictionary),
           dictionary:dictionary_predicate(E, Name/Arity, Modes),
-          dictionary:predicate_cost(E, Cost)
+        dictionary:predicate_cost(E, Cost),
+        number(Cost),
+        Cost > 0
         ),
         Raw),
     sort(Raw, Entries).
@@ -35,11 +37,15 @@ search(Open, Outputs, Entries, MaxCost, Program, Cost) :-
         Arity =:= 2,
         apply_predicate(Name, Values, NewValues),
         NewCost is CostSoFar + StepCost,
-        NewCost =< MaxCost
+        within_cost_limit(NewCost, MaxCost)
       ),
       NextNodes),
     append(Rest, NextNodes, NewOpen),
     search(NewOpen, Outputs, Entries, MaxCost, Program, Cost).
+
+within_cost_limit(_Cost, unbounded) :- !.
+within_cost_limit(Cost, MaxCost) :-
+    Cost =< MaxCost.
 
 select_best([H|T], Best, Rest) :-
     foldl(select_lower_cost, T, H, Best),

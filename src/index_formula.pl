@@ -11,6 +11,8 @@ discover_index_formula(Pairs, index_formula(a(A), b(B), expression('O is A*I+B')
 discover_affine_formula(Examples, affine(A, B)) :-
     must_be(list, Examples),
     maplist(as_io_pair, Examples, Inputs, Outputs),
+    maplist(number, Inputs),
+    maplist(number, Outputs),
     Inputs = [X1, X2|_],
     Outputs = [Y1, Y2|_],
     DX is X2 - X1,
