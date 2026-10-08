@@ -161,3 +161,11 @@ proof([kind(candidate(formula)), [selected(affine(2, 1)), verified(all_examples)
 - Use `portray_clause/1` when you want readable, reproducible output in docs or logs.
 - Use `writeln/1` for quick ad-hoc inspection.
 - The examples in this README are validated against the current repository state.
+
+## Remaining specification work
+
+- Broaden rule and formula discovery beyond affine relations and the single sign rule, including structural, positional, relational, and general recursive patterns.
+- Extend composition synthesis beyond sequential binary `[in,out]` calls to nested expressions, multi-argument predicates, and command/data-flow programs.
+- Implement CEGIS counterexample generation, and make safety and determinism checks substantive rather than placeholders.
+- Replace adjacent duplicate-call removal with index-loop splicing and add the other requested PLOP optimisations, including unfolding and formula simplification.
+- Add the requested secondary cost metrics (such as traversals, intermediate values, choicepoints, and memory) and use them to rank equal-cost candidates.

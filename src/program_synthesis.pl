@@ -8,10 +8,15 @@
 :- use_module(index_formula).
 
 synthesise(Examples, Dictionary, Program, Cost, Proof, candidate(composition)) :-
-    cost_model:cost_of(predicate_call, Step),
-    MaxCost is max(2, Step * 6),
-    composition_search:least_cost_composition(Examples, Dictionary, MaxCost, Program, Cost, Proof), !.
-synthesise(Examples, _Dictionary, affine(A, B), Cost, [selected(affine(A,B)), verified(all_examples)], candidate(formula)) :-
+    ( affine_candidate(Examples, _Affine, AffineCost, _AffineProof) ->
+        MaxCost = AffineCost
+    ; MaxCost = unbounded
+    ),
+    composition_search:least_cost_composition(Examples, Dictionary, MaxCost, Program, Cost, Proof).
+synthesise(Examples, _Dictionary, Formula, Cost, Proof, candidate(formula)) :-
+    affine_candidate(Examples, Formula, Cost, Proof).
+
+affine_candidate(Examples, affine(A, B), Cost, [selected(affine(A,B)), verified(all_examples)]) :-
     index_formula:discover_affine_formula(Examples, affine(A,B)),
     cost_model:cost_of(arithmetic_operator, ACost),
     cost_model:cost_of(arithmetic_operator, BCost),
