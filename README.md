@@ -169,3 +169,16 @@ proof([kind(candidate(formula)), [selected(affine(2, 1)), verified(all_examples)
 - Implement CEGIS counterexample generation, and make safety and determinism checks substantive rather than placeholders.
 - Replace adjacent duplicate-call removal with index-loop splicing and add the other requested PLOP optimisations, including unfolding and formula simplification.
 - Add the requested secondary cost metrics (such as traversals, intermediate values, choicepoints, and memory) and use them to rank equal-cost candidates.
+
+## Squares, reasons and alternatives
+
+- Where no linear formula fits, an exact quadratic `quadratic(A, B, C)`
+  (O = A*I*I + B*I + C) is tried. With only three examples any three points
+  fit, so its proof says `exact_fit_needs_more_examples`.
+- `discover_formula_result(Examples, Dictionary, Result)` gives
+  `found(Formula, Cost)` or `no_formula(Reason)`, with Reason one of
+  `no_examples`, `too_few_examples(N, needed(2))`, `non_numeric_examples`,
+  `conflicting_examples(Input)` or `no_candidate_fits`.
+- `formula_alternatives(Examples, Dictionary, Alternatives)` lists every
+  candidate found, cheapest first, so equal-cost formulas and compositions
+  are both visible.

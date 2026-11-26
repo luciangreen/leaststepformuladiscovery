@@ -5,7 +5,9 @@
       discover_rule/4,
       discover_index_formula/2,
       discover_recursive_formula/3,
-      least_cost_program/5
+      least_cost_program/5,
+      discover_formula_result/3,
+      formula_alternatives/3
     ]).
 
 :- use_module(cost_model).
@@ -54,6 +56,40 @@ keysort_candidates(Candidates, Sorted) :-
     keysort(Pairs, SortedPairs),
     findall(Candidate, member(_-Candidate, SortedPairs), Sorted).
 
+%% discover_formula_result(+Examples, +Dictionary, -Result)
+% Result is found(Formula, Cost) or no_formula(Reason), where Reason is
+% no_examples, too_few_examples(Count, needed(2)), non_numeric_examples,
+% conflicting_examples(Input) or no_candidate_fits.
+discover_formula_result(Examples, Dictionary, Result) :-
+    (   discover_formula(target/2, Examples, Dictionary, Formula, _Proof, Cost)
+    ->  Result = found(Formula, Cost)
+    ;   failure_reason(Examples, Reason),
+        Result = no_formula(Reason)
+    ).
+
+failure_reason([], no_examples) :- !.
+failure_reason(Examples, conflicting_examples(X)) :-
+    member(io(X, Y1), Examples),
+    member(io(X2, Y2), Examples),
+    X == X2, Y1 \== Y2, !.
+failure_reason(Examples, non_numeric_examples) :-
+    member(io(X, Y), Examples),
+    \+ (number(X), number(Y)), !.
+failure_reason(Examples, too_few_examples(N, needed(2))) :-
+    length(Examples, N), N < 2, !.
+failure_reason(_, no_candidate_fits).
+
+%% formula_alternatives(+Examples, +Dictionary, -Alternatives)
+% Every candidate found, cheapest first, as alternative(Formula, Cost, Kind),
+% so a user can see what the chosen formula was preferred to.
+formula_alternatives(Examples, Dictionary, Alternatives) :-
+    findall(cand(F,C,P,K),
+      program_synthesis:synthesise(Examples, Dictionary, F, C, P, K),
+      Candidates),
+    keysort_candidates(Candidates, Sorted),
+    findall(alternative(F, C, K), member(cand(F,C,_,K), Sorted), Alternatives).
+
+candidate_goal(quadratic(A,B,C), goal_quadratic(A,B,C)) :- !.
 candidate_goal(affine(A,B), Goal) :-
     Goal = goal_affine(A,B).
 candidate_goal(Program, Goal) :-
@@ -63,6 +99,10 @@ candidate_goal(Program, Goal) :-
 goal_affine(A,B, Input, Output) :-
     number(Input),
     Output is A*Input + B.
+
+goal_quadratic(A,B,C, Input, Output) :-
+    number(Input),
+    Output is A*Input*Input + B*Input + C.
 
 goal_program([], Value, Value).
 goal_program([call(Name/2)|Rest], Input, Output) :-

@@ -63,4 +63,38 @@ test(index_formula_discovery, [setup(setup_costs)]) :-
     Pairs = [io(1,3), io(2,5), io(3,7), io(4,9)],
     complex_formula_discovery:discover_index_formula(Pairs, index_formula(a(2), b(1), expression('O is A*I+B'))).
 
+test(squares_found_as_quadratic, [setup(setup_costs)]) :-
+    complex_formula_discovery:discover_formula([io(1,1), io(2,4), io(3,9), io(4,16)], [], F),
+    assertion(F == quadratic(1,0,0)).
+
+test(three_point_quadratic_flagged, [setup(setup_costs)]) :-
+    complex_formula_discovery:discover_formula(target/2, [io(1,1), io(2,4), io(3,9)], [], _, Proof, _),
+    Proof = [_, CandidateProof|_],
+    assertion(memberchk(exact_fit_needs_more_examples, CandidateProof)).
+
+test(linear_still_preferred, [setup(setup_costs)]) :-
+    complex_formula_discovery:discover_formula([io(1,3), io(2,5), io(3,7)], [], F),
+    assertion(F == affine(2,1)).
+
+test(single_example_reason, [setup(setup_costs)]) :-
+    complex_formula_discovery:discover_formula_result([io(5,11)], [], R),
+    assertion(R == no_formula(too_few_examples(1, needed(2)))).
+
+test(conflicting_examples_reason, [setup(setup_costs)]) :-
+    complex_formula_discovery:discover_formula_result([io(1,3), io(1,5)], [], R),
+    assertion(R == no_formula(conflicting_examples(1))).
+
+test(no_fit_reason, [setup(setup_costs)]) :-
+    complex_formula_discovery:discover_formula_result([io(1,3), io(2,5), io(3,8), io(4,20)], [], R),
+    assertion(R == no_formula(no_candidate_fits)).
+
+test(alternatives_listed, [setup(setup_costs)]) :-
+    Dictionary = [
+        dictionary_entry(inc/2,[in,out],det,pure,1,(inc(X,Y) :- Y is X+1)),
+        dictionary_entry(double/2,[in,out],det,pure,1,(double(X,Y) :- Y is X*2))
+    ],
+    complex_formula_discovery:formula_alternatives([io(1,3), io(2,5)], Dictionary, Alts),
+    assertion(memberchk(alternative(affine(2,1), 2, candidate(formula)), Alts)),
+    assertion(memberchk(alternative([call(double/2), call(inc/2)], 2, candidate(composition)), Alts)).
+
 :- end_tests(complex_formula_discovery).

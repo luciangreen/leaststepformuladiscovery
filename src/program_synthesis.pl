@@ -15,6 +15,20 @@ synthesise(Examples, Dictionary, Program, Cost, Proof, candidate(composition)) :
     composition_search:least_cost_composition(Examples, Dictionary, MaxCost, Program, Cost, Proof).
 synthesise(Examples, _Dictionary, Formula, Cost, Proof, candidate(formula)) :-
     affine_candidate(Examples, Formula, Cost, Proof).
+synthesise(Examples, _Dictionary, Formula, Cost, Proof, candidate(formula)) :-
+    \+ affine_candidate(Examples, _, _, _),
+    quadratic_candidate(Examples, Formula, Cost, Proof).
+
+% A quadratic costs five operators (two multiplications for I*I, one for B*I
+% and two additions), so it is chosen only where no linear formula fits.
+% With exactly three examples it fits any three points, so the proof says
+% that more examples are needed to confirm it.
+quadratic_candidate(Examples, quadratic(A, B, C), Cost, [selected(quadratic(A,B,C)), verified(all_examples), Confidence]) :-
+    index_formula:discover_quadratic_formula(Examples, quadratic(A, B, C)),
+    cost_model:cost_of(arithmetic_operator, Op),
+    Cost is 5 * Op,
+    length(Examples, N),
+    ( N > 3 -> Confidence = confirmed_by_extra_examples(N) ; Confidence = exact_fit_needs_more_examples ).
 
 affine_candidate(Examples, affine(A, B), Cost, [selected(affine(A,B)), verified(all_examples)]) :-
     index_formula:discover_affine_formula(Examples, affine(A,B)),
